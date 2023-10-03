@@ -18,6 +18,8 @@ def main():
         AVE_main(cfgs)
     elif cfgs.dataset == "MOSEI":
         MOSEI_main(cfgs)
+    elif cfgs.dataset == 'MOSEI-EMO':
+        MOSEI_main(cfgs)
     
 
 

@@ -53,6 +53,27 @@ MOSEI_Config = {
     "mode":'train',
 }
 
+MOSEI_EMO_Config = {
+    'aligned':True,
+    'z_norm':False,
+    'flatten':False,
+    'max_pad':True,
+    'max_pad_num':60,
+    "layer":6,
+    "hidden_size":512,
+    "dropout_r":0.1,
+    "multi_head":4,
+    "ff_size":1024,
+    "word_embed_size":300,
+    "lang_seq_len":60,
+    "audio_seq_len":60,
+    "video_seq_len":60,
+    "audio_feat_size":80,
+    "video_feat_size":512,
+    "task":'emotion',
+    "task_binary":True,
+    "mode":'train',
+}
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -69,7 +90,7 @@ def parse_args():
     parser.add_argument('--batch_size',type=int,default=16)
     parser.add_argument('--EPOCHS',type=int,default=10)
     parser.add_argument('--learning_rate',type=float,default=0.00001)
-    parser.add_argument('--dataset',default='AVMNIST',type=str,choices=['MOSEI','CREMAD','URFunny','AVE','AV-MNIST'])
+    parser.add_argument('--dataset',default='AVMNIST',type=str,choices=['MOSEI','CREMAD','URFunny','AVE','AV-MNIST', 'MOSEI-EMO'])
     parser.add_argument('--local_rank',default=-1,type=int,help="node rank for distributed training")
     parser.add_argument('--modulation_starts',default=0,type=int,help="where modulation starts.")
     parser.add_argument('--modulation_ends',default=20,type=int,help="where modulation ends")
@@ -105,3 +126,5 @@ class Config():
             self.add_args(AVE_Config)
         elif self.dataset == 'AV-MNIST':
             self.add_args(AVMNIST_Condig)
+        elif self.dataset == 'MOSEI-EMO':
+            self.add_args(MOSEI_EMO_Config)
