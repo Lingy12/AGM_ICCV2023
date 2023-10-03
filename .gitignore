@@ -3,3 +3,4 @@ MOSI/
 *.zip
 MELD/
 checkpoint/
+__pycache__/
