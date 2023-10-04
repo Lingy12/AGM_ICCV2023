@@ -1,4 +1,6 @@
 import torch
+from sklearn.metrics import classification_report
+import numpy as np
 
 def Accuracy(logits,target):
     logits = logits.detach().cpu()
@@ -26,4 +28,31 @@ def EmoScore(logits, target):
 
     emo_score = correct_emo_count / 6
     return torch.mean(emo_score)
+
+def AccuracyEval(logits, target):
+    # for evaluation
+    logits = logits.detach().cpu()
+    target = target.detach().cpu()
+
+    preds = logits.argmax(dim=-1)
     
+    assert preds.shape == target.shape
+    classification_report(y_pred=preds, y_true=target) # print classification report
+
+def EmoScoreEval(logit, target):
+    logits = logits.detach().cpu()
+    target = target.detach().cpu()
+    
+    preds = torch.where(logits > 0.5, 1, 0).long()
+    
+    emo_class_labels = ["Happy", "Sad", "Anger", "Disgust", "Surprise", "Fear"]
+    res_dict = {emo: {"pred":[], "target": []} for emo in emo_class_labels}
+    
+    for i in range(logits):
+        for j in range(len(logits[0])):
+            res_dict[emo_class_labels[j]]["pred"].append(int(preds[i][j]))
+            res_dict[emo_class_labels[j]]["target"].append(int(target[i][j]))
+            
+    for emo in emo_class_labels:
+        print('Classification result for ' + emo)
+        classification_report(y_true=np.array(res_dict[emo]['target']), y_pred=np.array(res_dict[emo]['pred']))

@@ -7,9 +7,9 @@ import os
 import math
 import torch.nn as nn
 import numpy as np
-from utils.metric import Accuracy, EmoScore
+from utils.metric import AccuracyEval, EmoScoreEval
 from tasks.MOSEI_task import Mosei_Task
-from utils.function_tools import save_config,get_logger,get_device,set_seed
+from utils.function_tools import get_device,set_seed
 
 def get_text_audio_score_sent(out_t, out_a, ans, transform):
     score_text = 0.
@@ -50,9 +50,11 @@ def validate(model,validate_dataloader,cfgs,device):
     softmax = nn.Softmax(dim=1)
     loss_fn = nn.CrossEntropyLoss()
     if cfgs.task == 'emotion':
-        eval_func = EmoScore
+        eval_func = EmoScoreEval
     else:
-        eval_func = Accuracy
+        eval_func = AccuracyEval
+    pred_lst = []
+    target_lst = []
     with torch.no_grad():
         if cfgs.use_mgpu:
             model.module.eval()
@@ -79,53 +81,48 @@ def validate(model,validate_dataloader,cfgs,device):
             z = z.to(device)
             ans = ans.to(device)
             if cfgs.modality == "Audio":
-                out_a = model.net(x,y,pad_x = True,pad_y = False)
-                loss = loss_fn(out_a,ans)
-                pred_a = softmax(out_a)
-                audio_accuracy = (pred_a,ans)
-                validate_audio_acc += audio_accuracy.item() / total_batch
+                # out_a = model.net(x,y,pad_x = True,pad_y = False)
+                # pred_a = softmax(out_a)
+                # audio_accuracy = (pred_a,ans)
+                # validate_audio_acc += audio_accuracy.item() / total_batch
 
-                score_audio = 0.
-                for k in range(out_a.size(0)):   
-                    if torch.isinf(torch.log(softmax(out_a)[k][ans[k]])) or softmax(out_a)[k][ans[k]] < 1e-8:
-                        score_audio += - torch.log(torch.tensor(1e-8,dtype=out_a.dtype,device=out_a.devcie))
-                    else:
-                        score_audio += - torch.log(softmax(out_a)[k][ans[k]])
-                score_audio = score_audio / out_a.size(0)
-                validate_score_a = validate_score_a * step / (step + 1) + score_audio.item() / (step + 1)
+                # score_audio = 0.
+                # for k in range(out_a.size(0)):   
+                #     if torch.isinf(torch.log(softmax(out_a)[k][ans[k]])) or softmax(out_a)[k][ans[k]] < 1e-8:
+                #         score_audio += - torch.log(torch.tensor(1e-8,dtype=out_a.dtype,device=out_a.devcie))
+                #     else:
+                #         score_audio += - torch.log(softmax(out_a)[k][ans[k]])
+                # score_audio = score_audio / out_a.size(0)
+                # validate_score_a = validate_score_a * step / (step + 1) + score_audio.item() / (step + 1)
+                print('Audio eval not supported. ')
             elif cfgs.modality == "Text":
-                out_t = model.net(x,y,pad_x = False,pad_y = True)
-                pred_t = softmax(out_t)
-                text_accuracy = eval_func(pred_t,ans)
-                loss = loss_fn(out_t,ans)
-                validate_text_acc += text_accuracy.item() / total_batch
+                # out_t = model.net(x,y,pad_x = False,pad_y = True)
+                # pred_t = softmax(out_t)
+                # text_accuracy = eval_func(pred_t,ans)
+                # validate_text_acc += text_accuracy.item() / total_batch
 
-                score_text = 0.
-                for k in range(out_t.size(0)):
-                    if torch.isinf(torch.log(softmax(out_t)[k][ans[k]])) or softmax(out_t)[k][ans[k]] < 1e-8:
-                        score_text += - torch.log(torch.tensor(1e-8,dtype=out_t.dtype,device=out_t.device))
-                    else:
-                        score_text += - torch.log(softmax(out_t)[k][ans[k]])
-                score_text = score_text / out_t.size(0)
-                validate_score_t = validate_score_t * step / (step + 1) + score_text.item() / (step + 1)
+                # score_text = 0.
+                # for k in range(out_t.size(0)):
+                #     if torch.isinf(torch.log(softmax(out_t)[k][ans[k]])) or softmax(out_t)[k][ans[k]] < 1e-8:
+                #         score_text += - torch.log(torch.tensor(1e-8,dtype=out_t.dtype,device=out_t.device))
+                #     else:
+                #         score_text += - torch.log(softmax(out_t)[k][ans[k]])
+                # score_text = score_text / out_t.size(0)
+                # validate_score_t = validate_score_t * step / (step + 1) + score_text.item() / (step + 1)
+                print('Text eval not supported')
             elif cfgs.modality == "Multimodal":
                 out_t,out_a,C,out = model(x,y,z)
-                loss = loss_fn(out,ans)
                 pred = softmax(out)
-                pred_t = softmax(out_t)
-                pred_a = softmax(out_a)
-
-                accuracy = eval_func(pred,ans)
-                text_accuracy = eval_func(pred_t,ans)
-                audio_accuracy = eval_func(pred_a,ans)
-
-                validate_acc += accuracy.item() / total_batch
-                validate_text_acc += text_accuracy.item() / total_batch
-                validate_audio_acc += audio_accuracy.item() / total_batch
-
+                # pred_t = softmax(out_t)
+                # pred_a = softmax(out_a)
+                pred_lst.append(pred.cpu())
+                target_lst.append(ans.cpu())
+                
                 if torch.isnan(out_t).any() or torch.isnan(out_a).any():
                     raise ValueError
-
+        preds = torch.concat(pred_lst)
+        target = torch.concat(target_lst)
+        eval_func(preds, target)
 
 
 def MOSEI_eval(cfgs):
@@ -146,10 +143,10 @@ def MOSEI_eval(cfgs):
     test_dataloader = task.test_dataloader
 
     model = task.model
-    optimizer = task.optimizer
-    scheduler = task.scheduler
-
     model.to(device)
+    
+    model.load_state_dict(torch.load(os.path.join(model_dir, 'best.pt')))
+    print('loaded best model')
     if cfgs.use_mgpu:
         model = torch.nn.DataParallel(model,device_ids=gpu_ids)
         model.to(device)
