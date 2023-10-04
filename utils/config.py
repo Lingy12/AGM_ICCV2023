@@ -101,6 +101,7 @@ def parse_args():
     parser.add_argument('--gpu_ids', default='0,1,2', type=str, help='GPU ids')
     parser.add_argument('--save_checkpoint',type=boolean_string,default=False,help='whether to save checkpoint or not.')
     parser.add_argument('--optim',default='sgd',type=str,choices=['sgd','adamw','adam'],help='the type of the optimizer')
+    parser.add_argument('--mode',default='train',type=str,choices=['train', 'test'],help='mode of running')
     parser.add_argument('--lr_scalar',default='lrstep',type=str,choices=['lrstep','cosinestep','cosinestepwarmup'],help='the type of the step learning rate')
     args= parser.parse_args()
     return args

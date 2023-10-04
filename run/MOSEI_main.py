@@ -9,6 +9,7 @@ from utils.metric import Accuracy, EmoScore
 from tasks.MOSEI_task import Mosei_Task
 from utils.function_tools import save_config,get_logger,get_device,set_seed
 from torch.utils.tensorboard import SummaryWriter
+import shutil
 
 def get_text_audio_score_sent(out_t, out_a, ans, transform):
     score_text = 0.
@@ -405,4 +406,6 @@ def MOSEI_main(cfgs):
             torch.save(model.state_dict(), os.path.join(model_dir, f'best_{epoch}.pt'))
             logger.info('Best model saved.')
         
-        logger.info(f'Best epoch{best_epoch["epoch"]},best accuracy{best_epoch["acc"]}')
+        logger.info(f'Best epoch{best_epoch["epoch"]},best accuracy{best_epoch["acc"]}')    
+        
+    shutil.copyfile(os.path.join(model_dir, f'best_{best_epoch["epoch"]}.pt'), os.path.join(model_dir, f'best.pt'))
