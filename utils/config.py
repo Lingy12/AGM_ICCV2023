@@ -50,7 +50,7 @@ MOSEI_Config = {
     "video_feat_size":512,
     "task":'sentiment',
     "task_binary":True,
-    "mode":'train',
+    # "mode":'train',
 }
 
 MOSEI_EMO_Config = {
@@ -72,7 +72,7 @@ MOSEI_EMO_Config = {
     "video_feat_size":512,
     "task":'emotion',
     "task_binary":True,
-    "mode":'train',
+    # "mode":'train',
 }
 
 def parse_args():

@@ -37,9 +37,9 @@ def AccuracyEval(logits, target):
     preds = logits.argmax(dim=-1)
     
     assert preds.shape == target.shape
-    classification_report(y_pred=preds, y_true=target) # print classification report
+    print(classification_report(y_pred=preds, y_true=target)) # print classification report
 
-def EmoScoreEval(logit, target):
+def EmoScoreEval(logits, target):
     logits = logits.detach().cpu()
     target = target.detach().cpu()
     
@@ -48,11 +48,11 @@ def EmoScoreEval(logit, target):
     emo_class_labels = ["Happy", "Sad", "Anger", "Disgust", "Surprise", "Fear"]
     res_dict = {emo: {"pred":[], "target": []} for emo in emo_class_labels}
     
-    for i in range(logits):
+    for i in range(len(logits)):
         for j in range(len(logits[0])):
             res_dict[emo_class_labels[j]]["pred"].append(int(preds[i][j]))
             res_dict[emo_class_labels[j]]["target"].append(int(target[i][j]))
             
     for emo in emo_class_labels:
         print('Classification result for ' + emo)
-        classification_report(y_true=np.array(res_dict[emo]['target']), y_pred=np.array(res_dict[emo]['pred']))
+        print(classification_report(y_true=np.array(res_dict[emo]['target']), y_pred=np.array(res_dict[emo]['pred'])))
