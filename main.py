@@ -5,7 +5,6 @@ from run.URFunny_main import URFunny_main
 from run.AVE_main import AVE_main
 from run.MOSEI_main import MOSEI_main
 from eval.MOSEI_eval import MOSEI_eval
-import fire
 
 def main():
     cfgs = Config()
