@@ -340,8 +340,11 @@ def MOSEI_main(cfgs):
     set_seed(cfgs.random_seed)
     ts = time.strftime('%Y_%m_%d %H:%M:%S',time.localtime())
     save_dir = os.path.join(cfgs.expt_dir,f"{ts}_{cfgs.expt_name}")
+    model_dir = os.path.join('models', cfgs.expt_name)
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
     save_config(cfgs,save_dir)
     logger = get_logger("train_logger",logger_dir=save_dir)
     logger.info(vars(cfgs))
@@ -398,5 +401,8 @@ def MOSEI_main(cfgs):
                             'acc':best_epoch['acc'],
                             'epoch_score_t':epoch_score_t,
                             'epoch_score_a':epoch_score_a},os.path.join(save_dir,f'ckpt_full_epoch{epoch}.pth.tar'))
+            logger.info('Saving best model...')
+            torch.save(model.state_dict(), os.path.join(model_dir, f'best_{epoch}.pt'))
+            logger.info('Best model saved.')
         
         logger.info(f'Best epoch{best_epoch["epoch"]},best accuracy{best_epoch["acc"]}')
